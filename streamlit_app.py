@@ -4,7 +4,7 @@ import statsmodels.api as sm
 from pathlib import Path
 import matplotlib.pyplot as plt
 
-# --- [추가] 그래프 한글 폰트 깨짐 방지 설정 ---
+# --- 그래프 한글 폰트 깨짐 방지 설정 ---
 # Windows 환경을 기본으로 설정합니다. Mac인 경우 'Malgun Gothic'을 'AppleGothic'으로 변경하세요.
 plt.rcParams['font.family'] = 'Malgun Gothic' 
 plt.rcParams['axes.unicode_minus'] = False
@@ -50,7 +50,7 @@ var_names = {
     "Q8A1": "학교 교육 충분성"
 }
 
-# 커스텀 CSS
+# 커스텀 CSS (보이지 않는 특수 공백 완전 제거)
 st.markdown(
     """
     <style>
@@ -95,9 +95,7 @@ independent_vars = ["Q4A1", "Q7A5", "Q8A1"]
 if section == "과제 소개":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>1. 과제 목표</div>", unsafe_allow_html=True)
-    st.write(
-        "청소년의 탄소중립 실천 의지에 영향을 주는 요인을 분석하고, 결과를 기반으로 학교 교육 방향을 제시합니다."
-    )
+    st.write("청소년의 탄소중립 실천 의지에 영향을 주는 요인을 분석하고, 결과를 기반으로 학교 교육 방향을 제시합니다.")
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -163,34 +161,10 @@ elif section == "데이터 안내":
     st.markdown("<div class='section-title'>변수 구성</div>", unsafe_allow_html=True)
     var_table = pd.DataFrame(
         {
-            "변수 유형": [
-                "종속 변수",
-                "독립 변수 1",
-                "독립 변수 2",
-                "독립 변수 3",
-                "통제 변수",
-            ],
-            "변수명": [
-                var_names["Q9"],
-                var_names["Q4A1"],
-                var_names["Q7A5"],
-                var_names["Q8A1"],
-                "성별, 학교급, 학년, 권역, 남여공학",
-            ],
-            "질문 ID": [
-                "Q9",
-                "Q4A1",
-                "Q7A5",
-                "Q8A1",
-                "DM1, DM2, DM3, DM4, DM9",
-            ],
-            "설명": [
-                "탄소중립 실천 의지 또는 실천 의향",
-                "기후변화 관심도",
-                "생활습관에 대한 죄책감 수준",
-                "학교 교육의 충분성",
-                "사회경제적 배경을 통제하는 변인들",
-            ],
+            "변수 유형": ["종속 변수", "독립 변수 1", "독립 변수 2", "독립 변수 3", "통제 변수"],
+            "변수명": [var_names["Q9"], var_names["Q4A1"], var_names["Q7A5"], var_names["Q8A1"], "성별, 학교급, 학년, 권역, 남여공학"],
+            "질문 ID": ["Q9", "Q4A1", "Q7A5", "Q8A1", "DM1, DM2, DM3, DM4, DM9"],
+            "설명": ["탄소중립 실천 의지 또는 실천 의향", "기후변화 관심도", "생활습관에 대한 죄책감 수준", "학교 교육의 충분성", "사회경제적 배경을 통제하는 변인들"],
         }
     )
     st.table(var_table)
@@ -198,17 +172,28 @@ elif section == "데이터 안내":
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.write("### 선택 변수 기술 통계")
-    # --- [수정] 기술 통계 전 숫자 변환 보장 ---
-    stat_df = raw_df[selected_cols].apply(pd.to_numeric, errors='coerce')
+    # --- [안전코드] 각 열별로 명확하게 숫자 변환 보장 ---
+    stat_df = raw_df[selected_cols].copy()
+    for col in selected_cols:
+        stat_df[col] = pd.to_numeric(stat_df[col], errors='coerce')
     st.table(stat_df.describe().T)
 
 # 3. 회귀 분석 섹션
 elif section == "회귀 분석":
     st.subheader("회귀 분석 실행")
     
-    # --- [수정] 결측치 제거 전에 숫자형으로 강제 변환 (ValueError 방지) ---
+    # --- [안전코드] 결측치 제거 전에 숫자형으로 강제 변환 ---
     analysis_df = raw_df[[dependent_var] + independent_vars].copy()
-    analysis_df = analysis_df.apply(pd.to_numeric, errors='coerce').dropna()
+    
+    for col in analysis_df.columns:
+        analysis_df[col] = pd.to_numeric(analysis_df[col], errors='coerce')
+        
+    analysis_df = analysis_df.dropna()
+    
+    # 🚨 유효 데이터 0개 에러 방지
+    if analysis_df.shape[0] == 0:
+        st.error("🚨 분석할 수 있는 유효한 숫자 데이터가 0개입니다! CSV 파일의 Q9, Q4A1, Q7A5, Q8A1 열에 한글이 섞여 있거나 빈칸인지 확인해 주세요.")
+        st.stop()
     
     st.write(f"- 사용된 샘플 수: {analysis_df.shape[0]}개")
 
@@ -231,7 +216,6 @@ elif section == "회귀 분석":
     st.write("### 회귀 계수 결과")
     coef_table = model.summary2().tables[1].reset_index()
     coef_table.columns = ["변수", "계수", "표준오차", "t값", "p값", "[0.025", "0.975]"]
-    # 변수명을 한국어로 매핑
     coef_table["변수"] = coef_table["변수"].map(lambda x: var_names.get(x, x))
     st.dataframe(coef_table, use_container_width=True)
 
@@ -270,7 +254,6 @@ elif section == "결과 및 제출 자료":
     st.markdown("---")
     st.subheader("파일 자료 다운로드")
     
-    # 다운로드 버튼 적용
     col1, col2 = st.columns(2)
     
     with col1:
