@@ -115,8 +115,7 @@ elif section == "데이터 안내":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>데이터 소개</div>", unsafe_allow_html=True)
     st.write(
-        "이번 과제는 `청소년이 주도하는 탄소중립 추진방안` 데이터를 활용합니다. "
-        "청소년의 환경적 인지 및 심리·사회적 요인이 일상 속 탄소중립 실천 의지에 미치는 영향을 다각적으로 분석합니다."
+        "본 페이지는 데이터 분석 과제 제출을 위해 제작된 Streamlit 애플리케이션입니다. 데이터 탐색(EDA)부터 지정된 변수 기반의 회귀분석 실행, 그리고 최종 결론 도출까지의 분석 과정을 순차적으로 제공합니다."
     )
 
     selected_cols = [dependent_var] + independent_vars
