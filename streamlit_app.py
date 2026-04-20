@@ -3,11 +3,19 @@ import pandas as pd
 import statsmodels.api as sm
 from pathlib import Path
 import matplotlib.pyplot as plt
+import platform  # --- [추가] 사용자의 OS(운영체제)를 확인하는 라이브러리 ---
 
-# --- 그래프 한글 폰트 깨짐 방지 설정 ---
-# Windows 환경을 기본으로 설정합니다. Mac인 경우 'Malgun Gothic'을 'AppleGothic'으로 변경하세요.
-plt.rcParams['font.family'] = 'Malgun Gothic' 
-plt.rcParams['axes.unicode_minus'] = False
+# --- [수정] OS별 그래프 한글 폰트 자동 설정 ---
+os_name = platform.system()
+if os_name == 'Darwin':  # Mac 사용자
+    plt.rc('font', family='AppleGothic')
+elif os_name == 'Windows':  # Windows 사용자
+    plt.rc('font', family='Malgun Gothic')
+else:  # Linux (스트림릿 클라우드 등)
+    plt.rc('font', family='NanumGothic')
+
+plt.rcParams['axes.unicode_minus'] = False # 마이너스(-) 기호 깨짐 방지
+# -----------------------------------------------
 
 # 페이지 설정
 st.set_page_config(
@@ -50,7 +58,7 @@ var_names = {
     "Q8A1": "학교 교육 충분성"
 }
 
-# 커스텀 CSS (보이지 않는 특수 공백 완전 제거)
+# 커스텀 CSS
 st.markdown(
     """
     <style>
@@ -172,7 +180,6 @@ elif section == "데이터 안내":
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.write("### 선택 변수 기술 통계")
-    # --- [안전코드] 각 열별로 명확하게 숫자 변환 보장 ---
     stat_df = raw_df[selected_cols].copy()
     for col in selected_cols:
         stat_df[col] = pd.to_numeric(stat_df[col], errors='coerce')
@@ -182,7 +189,6 @@ elif section == "데이터 안내":
 elif section == "회귀 분석":
     st.subheader("회귀 분석 실행")
     
-    # --- [안전코드] 결측치 제거 전에 숫자형으로 강제 변환 ---
     analysis_df = raw_df[[dependent_var] + independent_vars].copy()
     
     for col in analysis_df.columns:
@@ -190,7 +196,6 @@ elif section == "회귀 분석":
         
     analysis_df = analysis_df.dropna()
     
-    # 🚨 유효 데이터 0개 에러 방지
     if analysis_df.shape[0] == 0:
         st.error("🚨 분석할 수 있는 유효한 숫자 데이터가 0개입니다! CSV 파일의 Q9, Q4A1, Q7A5, Q8A1 열에 한글이 섞여 있거나 빈칸인지 확인해 주세요.")
         st.stop()
