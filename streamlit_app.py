@@ -118,7 +118,7 @@ elif section == "데이터 안내":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>데이터 소개</div>", unsafe_allow_html=True)
     st.write(
-        "본 연구는 `2023 청소년 금융이해력 및 금융생활실태 조사` 데이터를 활용합니다. "
+        "이번 과제는 `2023 청소년 금융이해력 및 금융생활실태 조사` 데이터를 활용합니다. "
         "전국 중·고등학생을 대상으로 금융 지식, 행동, 경험, 웰빙 수준 등을 측정한 대규모 설문조사입니다."
     )
 
