@@ -4,6 +4,11 @@ import statsmodels.api as sm
 from pathlib import Path
 import matplotlib.pyplot as plt
 
+# --- [추가] 그래프 한글 폰트 깨짐 방지 설정 ---
+# Windows 환경을 기본으로 설정합니다. Mac인 경우 'Malgun Gothic'을 'AppleGothic'으로 변경하세요.
+plt.rcParams['font.family'] = 'Malgun Gothic' 
+plt.rcParams['axes.unicode_minus'] = False
+
 # 페이지 설정
 st.set_page_config(
     page_title="과제형 탄소중립 분석",
@@ -68,6 +73,7 @@ st.markdown(
 
 with st.container():
     st.title("📘 과제형 탄소중립 실천 요인 분석")
+    st.write("① 데이터 구조 파악 ➔ ② 고정 변수 기반 다중회귀분석 ➔ ③ 핵심 인사이트 및 결론 도출")
 
 # 사이드바 설정
 section = st.sidebar.radio(
@@ -192,12 +198,18 @@ elif section == "데이터 안내":
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.write("### 선택 변수 기술 통계")
-    st.table(raw_df[selected_cols].describe().T)
+    # --- [수정] 기술 통계 전 숫자 변환 보장 ---
+    stat_df = raw_df[selected_cols].apply(pd.to_numeric, errors='coerce')
+    st.table(stat_df.describe().T)
 
 # 3. 회귀 분석 섹션
 elif section == "회귀 분석":
     st.subheader("회귀 분석 실행")
-    analysis_df = raw_df[[dependent_var] + independent_vars].dropna()
+    
+    # --- [수정] 결측치 제거 전에 숫자형으로 강제 변환 (ValueError 방지) ---
+    analysis_df = raw_df[[dependent_var] + independent_vars].copy()
+    analysis_df = analysis_df.apply(pd.to_numeric, errors='coerce').dropna()
+    
     st.write(f"- 사용된 샘플 수: {analysis_df.shape[0]}개")
 
     Y = analysis_df[dependent_var]
