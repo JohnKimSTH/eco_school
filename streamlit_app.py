@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import statsmodels.api as sm
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 st.set_page_config(
     page_title="과제형 탄소중립 분석",
@@ -58,10 +59,6 @@ st.markdown(
 
 with st.container():
     st.title("📘 과제형 탄소중립 실천 요인 분석")
-    st.write(
-        "이 페이지는 과제 제출 형식으로 구성된 Streamlit 앱입니다. "
-        "데이터 구조 확인, 고정 변수로 회귀분석을 실행하고, 결론을 도출하세요."
-    )
 
 section = st.sidebar.radio(
     "과제 창",
@@ -118,8 +115,8 @@ elif section == "데이터 안내":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>데이터 소개</div>", unsafe_allow_html=True)
     st.write(
-        "이번 과제는 `2023 청소년 금융이해력 및 금융생활실태 조사` 데이터를 활용합니다. "
-        "전국 중·고등학생을 대상으로 금융 지식, 행동, 경험, 웰빙 수준 등을 측정한 대규모 설문조사입니다."
+        "이번 과제는 `청소년이 주도하는 탄소중립 추진방안` 데이터를 활용합니다. "
+        "청소년의 환경적 인지 및 심리·사회적 요인이 일상 속 탄소중립 실천 의지에 미치는 영향을 다각적으로 분석합니다."
     )
 
     selected_cols = [dependent_var] + independent_vars
@@ -195,6 +192,17 @@ elif section == "회귀 분석":
     X = analysis_df[independent_vars]
     X = sm.add_constant(X)
     model = sm.OLS(Y, X).fit()
+
+    st.write("### 독립변수 히스토그램")
+    cols = st.columns(len(independent_vars))
+    for i, var in enumerate(independent_vars):
+        with cols[i]:
+            fig, ax = plt.subplots()
+            ax.hist(analysis_df[var], bins=20, alpha=0.7, color='skyblue', edgecolor='black')
+            ax.set_title(f"{var_names[var]} ({var})")
+            ax.set_xlabel("값")
+            ax.set_ylabel("빈도")
+            st.pyplot(fig)
 
     st.write("### 회귀 계수 결과")
     coef_table = model.summary2().tables[1].reset_index()
