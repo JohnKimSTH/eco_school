@@ -4,20 +4,27 @@ import statsmodels.api as sm
 from pathlib import Path
 import matplotlib.pyplot as plt
 
+# 페이지 설정
 st.set_page_config(
     page_title="과제형 탄소중립 분석",
     page_icon="📘",
     layout="wide",
 )
 
+# 파일 경로 설정
 BASE_DIR = Path(__file__).resolve().parent
 CSV_PATH = BASE_DIR / "eco.csv"
 EXCEL_PATH = BASE_DIR / "eco.xlsx"
 PDF_PATH = BASE_DIR / "eco.pdf"
 
+# 데이터 로딩 함수 (예외 처리 추가)
 @st.cache_data
 def load_data():
-    return pd.read_csv(CSV_PATH)
+    try:
+        return pd.read_csv(CSV_PATH)
+    except FileNotFoundError:
+        st.error("⚠️ 'eco.csv' 파일을 찾을 수 없습니다. 파이썬 파일과 동일한 폴더에 파일이 있는지 확인해주세요.")
+        st.stop() # 에러 발생 시 앱 실행 중지
 
 @st.cache_data
 def load_excel():
@@ -26,6 +33,7 @@ def load_excel():
     except Exception:
         return None
 
+# 데이터 불러오기
 raw_df = load_data()
 all_vars = [col for col in raw_df.columns if col.startswith("Q")]
 
@@ -37,6 +45,7 @@ var_names = {
     "Q8A1": "학교 교육 충분성"
 }
 
+# 커스텀 CSS
 st.markdown(
     """
     <style>
@@ -60,6 +69,7 @@ st.markdown(
 with st.container():
     st.title("📘 과제형 탄소중립 실천 요인 분석")
 
+# 사이드바 설정
 section = st.sidebar.radio(
     "과제 창",
     ["과제 소개", "데이터 안내", "회귀 분석", "결과 및 제출 자료"],
@@ -75,12 +85,13 @@ st.sidebar.caption(f"Q4A1: {var_names['Q4A1']}\n Q7A5: {var_names['Q7A5']}\n Q8A
 dependent_var = "Q9"
 independent_vars = ["Q4A1", "Q7A5", "Q8A1"]
 
+# 1. 과제 소개 섹션
 if section == "과제 소개":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>1. 과제 목표</div>", unsafe_allow_html=True)
     st.write(
-        "청니다."
-    )소년의 탄소중립 실천 의지에 영향을 주는 요인을 분석하고, 결과를 기반으로 학교 교육 방향을 제시합
+        "청소년의 탄소중립 실천 의지에 영향을 주는 요인을 분석하고, 결과를 기반으로 학교 교육 방향을 제시합니다."
+    )
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -111,6 +122,7 @@ if section == "과제 소개":
         "3. 회귀 분석 결과를 통해 해석을 완성합니다."
     )
 
+# 2. 데이터 안내 섹션
 elif section == "데이터 안내":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>데이터 소개</div>", unsafe_allow_html=True)
@@ -182,6 +194,7 @@ elif section == "데이터 안내":
     st.write("### 선택 변수 기술 통계")
     st.table(raw_df[selected_cols].describe().T)
 
+# 3. 회귀 분석 섹션
 elif section == "회귀 분석":
     st.subheader("회귀 분석 실행")
     analysis_df = raw_df[[dependent_var] + independent_vars].dropna()
@@ -223,6 +236,7 @@ elif section == "회귀 분석":
     with st.expander("모델 상세 요약 보기", expanded=False):
         st.text(model.summary())
 
+# 4. 결과 및 제출 자료 섹션
 elif section == "결과 및 제출 자료":
     st.subheader("결과 해석 및 제출 자료")
     st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -242,15 +256,34 @@ elif section == "결과 및 제출 자료":
     )
 
     st.markdown("---")
-    st.subheader("파일 자료")
-    if EXCEL_PATH.exists():
-        st.markdown("- [eco.xlsx 다운로드](./eco.xlsx)")
-    else:
-        st.write("eco.xlsx 파일을 찾을 수 없습니다.")
-    if PDF_PATH.exists():
-        st.markdown("- [eco.pdf 다운로드](./eco.pdf)")
-    else:
-        st.write("eco.pdf 파일을 찾을 수 없습니다.")
+    st.subheader("파일 자료 다운로드")
+    
+    # 다운로드 버튼 적용
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if EXCEL_PATH.exists():
+            with open(EXCEL_PATH, "rb") as file:
+                st.download_button(
+                    label="📥 eco.xlsx 다운로드",
+                    data=file,
+                    file_name="eco.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        else:
+            st.warning("⚠️ eco.xlsx 파일을 찾을 수 없습니다.")
+            
+    with col2:
+        if PDF_PATH.exists():
+            with open(PDF_PATH, "rb") as file:
+                st.download_button(
+                    label="📥 eco.pdf 다운로드",
+                    data=file,
+                    file_name="eco.pdf",
+                    mime="application/pdf"
+                )
+        else:
+            st.warning("⚠️ eco.pdf 파일을 찾을 수 없습니다.")
 
     excel_df = load_excel()
     if excel_df is not None:
