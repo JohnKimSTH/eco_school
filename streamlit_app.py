@@ -79,8 +79,8 @@ if section == "과제 소개":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>1. 과제 목표</div>", unsafe_allow_html=True)
     st.write(
-        "청소년의 탄소중립 실천 의지에 영향을 주는 요인을 분석하고, 결과를 기반으로 학교 교육 방향을 제시합니다."
-    )
+        "청니다."
+    )소년의 탄소중립 실천 의지에 영향을 주는 요인을 분석하고, 결과를 기반으로 학교 교육 방향을 제시합
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("<div class='card'>", unsafe_allow_html=True)
