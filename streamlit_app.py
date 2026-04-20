@@ -207,16 +207,20 @@ elif section == "회귀 분석":
     X = sm.add_constant(X)
     model = sm.OLS(Y, X).fit()
 
-    st.write("### 독립변수 히스토그램")
+    # ==========================================
+    # 🚨 한글 깨짐 완전 해결! (Streamlit Native Chart 사용)
+    # matplotlib을 쓰지 않고 Streamlit 기본 기능으로 그립니다.
+    # ==========================================
+    st.write("### 독립변수 분포 (히스토그램)")
     cols = st.columns(len(independent_vars))
+    
     for i, var in enumerate(independent_vars):
         with cols[i]:
-            fig, ax = plt.subplots()
-            ax.hist(analysis_df[var], bins=20, alpha=0.7, color='skyblue', edgecolor='black')
-            ax.set_title(f"{var_names[var]} ({var})")
-            ax.set_xlabel("값")
-            ax.set_ylabel("빈도")
-            st.pyplot(fig)
+            st.write(f"**{var_names[var]} ({var})**")
+            # 변수의 값별 빈도수를 계산 (히스토그램과 같은 효과)
+            value_counts = analysis_df[var].value_counts().sort_index()
+            # Streamlit의 bar_chart를 사용하여 깨짐 없이 출력
+            st.bar_chart(value_counts, color="#60b4ff")
 
     st.write("### 회귀 계수 결과")
     coef_table = model.summary2().tables[1].reset_index()
