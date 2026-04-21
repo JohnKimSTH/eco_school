@@ -267,9 +267,9 @@ elif active_tab == 'III. 연구방법':
     st.markdown("""
     <div class="toss-card">
         <p class="paper-chapter">Chapter 1</p>
-        <h3 class="toss-title">1. 연구대상 및 표집절차</h3>
+        <h3 class="toss-title">1. 연구대상 및 자료수집</h3>
         <p class="toss-text">
-            본 연구는 경험 과학적 접근에 입각하여 전국의 중·고등학생을 모집단으로 설정하였다. 무선 표집(Random Sampling) 방식을 활용하여 원시 자료를 수집하였으며, 측정도구의 응답 누락 등 결측치(Missing value)가 존재하는 데이터를 제외하고 유효한 표본만을 최종 분석에 사용하였다.
+            본 연구는 한국청소년정책연구원(NYPI)의 청소년 탄소중립 관련 원시 자료(Raw Data)를 2차 분석(Secondary Data Analysis)에 활용하였다. 분석의 정확성을 기하기 위하여 측정도구의 응답 누락 등 결측치(Missing value)가 존재하는 데이터를 일괄 제외(Listwise Deletion)하였으며, 이를 통해 정제된 유효 표본만을 최종 분석 대상으로 설정하였다.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -332,7 +332,46 @@ elif active_tab == 'IV. 연구결과':
             st.altair_chart(chart, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 2</p><h3 class="toss-title">2. 설정된 가설의 검증</h3>', unsafe_allow_html=True)
+    # --- 상관관계 히트맵 추가 ---
+    st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 2</p><h3 class="toss-title">2. 변인 간 상관관계 (히트맵)</h3>', unsafe_allow_html=True)
+    
+    corr_vars = ['Q9', 'Q4A1', 'Q7A5', 'Q8A1']
+    corr_matrix = analysis_df[corr_vars].corr().round(3).reset_index()
+    corr_long = corr_matrix.melt(id_vars='index')
+    corr_long.columns = ['변수1', '변수2', '상관계수']
+    
+    # 한글 변수명 매핑
+    corr_long['변수1_명'] = corr_long['변수1'].map(VAR_NAMES)
+    corr_long['변수2_명'] = corr_long['변수2'].map(VAR_NAMES)
+    
+    # 히트맵 베이스 차트
+    base = alt.Chart(corr_long).encode(
+        x=alt.X('변수1_명:O', title="", axis=alt.Axis(labelAngle=0, labelColor="#333D4B", labelFontSize=14, labelFontWeight=700, tickSize=0, domain=False)),
+        y=alt.Y('변수2_명:O', title="", axis=alt.Axis(labelColor="#333D4B", labelFontSize=14, labelFontWeight=700, tickSize=0, domain=False))
+    )
+    
+    # 히트맵 사각형 (토스 블루 색상 스케일 및 모서리 라운드 처리)
+    rect = base.mark_rect(cornerRadius=10, stroke='white', strokeWidth=4).encode(
+        color=alt.Color('상관계수:Q', scale=alt.Scale(range=['#E8F3FF', '#3182F6']), legend=None),
+        tooltip=[alt.Tooltip('변수1_명', title='변수 1'), alt.Tooltip('변수2_명', title='변수 2'), alt.Tooltip('상관계수', title='상관계수')]
+    )
+    
+    # 히트맵 텍스트 (명도에 따라 텍스트 색상 다르게 처리)
+    text = base.mark_text(baseline='middle', fontSize=16, fontWeight=800).encode(
+        text=alt.Text('상관계수:Q', format='.2f'),
+        color=alt.condition(
+            alt.datum.상관계수 > 0.5,
+            alt.value('white'),
+            alt.value('#191F28')
+        )
+    )
+    
+    heatmap = (rect + text).properties(height=340).configure_view(strokeWidth=0).configure_axis(grid=False)
+    st.altair_chart(heatmap, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # 기존 Chapter 2를 Chapter 3로 밀어냄
+    st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 3</p><h3 class="toss-title">3. 설정된 가설의 검증 (다중회귀분석)</h3>', unsafe_allow_html=True)
     
     summary_table = model.summary2().tables[1].reset_index()
     summary_table.columns = ['변인', '비표준화 계수(B)', '표준오차', 't값', 'p값', '95% CI 하한', '95% CI 상한']
