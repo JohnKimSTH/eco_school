@@ -146,8 +146,8 @@ st.markdown("""
 
 # --- 사이드바 (논문 목차 구조 적용) ---
 with st.sidebar:
-    st.markdown('<p class="toss-sidebar-title">📄 연구논문 뷰어</p>', unsafe_allow_html=True)
-    st.markdown('<p class="toss-sidebar-subtitle">경험 과학적 접근 기반</p>', unsafe_allow_html=True)
+    st.markdown('<p class="toss-sidebar-title">📄 데이터 분석 대시보드</p>', unsafe_allow_html=True)
+    st.markdown('<p class="toss-sidebar-subtitle">데이터 기반 실증 분석</p>', unsafe_allow_html=True)
     
     # 교안에 명시된 5단계 구조
     active_tab = st.radio(
@@ -166,7 +166,7 @@ with st.sidebar:
     
     st.markdown("""
     <div style="background-color: #F2F4F6; padding: 16px; border-radius: 12px;">
-        <p style="color: #6B7684; font-size: 12px; font-weight: 600; margin: 0 0 8px 0;">연구 논문 요약</p>
+        <p style="color: #6B7684; font-size: 12px; font-weight: 600; margin: 0 0 8px 0;">연구 과제 요약</p>
         <p style="color: #333D4B; font-size: 14px; font-weight: 700; line-height: 1.5; margin: 0;">
             기후위기 인식 및 정서적 요인이<br>청소년의 탄소중립 실천 의지에<br>미치는 영향
         </p>
@@ -332,7 +332,7 @@ elif active_tab == 'IV. 연구결과':
             st.altair_chart(chart, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- 상관관계 히트맵 추가 ---
+    # --- 상관관계 히트맵 (정렬 및 위치 보정) ---
     st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 2</p><h3 class="toss-title">2. 변인 간 상관관계 (히트맵)</h3>', unsafe_allow_html=True)
     
     corr_vars = ['Q9', 'Q4A1', 'Q7A5', 'Q8A1']
@@ -344,10 +344,38 @@ elif active_tab == 'IV. 연구결과':
     corr_long['변수1_명'] = corr_long['변수1'].map(VAR_NAMES)
     corr_long['변수2_명'] = corr_long['변수2'].map(VAR_NAMES)
     
-    # 히트맵 베이스 차트
+    # X, Y축 순서 고정 (대각선이 깔끔하게 떨어지도록 설정)
+    var_order = list(VAR_NAMES.values())
+    
+    # 히트맵 베이스 차트 (축 라벨 정렬 및 겹침 방지 강제 설정)
     base = alt.Chart(corr_long).encode(
-        x=alt.X('변수1_명:O', title="", axis=alt.Axis(labelAngle=0, labelColor="#333D4B", labelFontSize=14, labelFontWeight=700, tickSize=0, domain=False)),
-        y=alt.Y('변수2_명:O', title="", axis=alt.Axis(labelColor="#333D4B", labelFontSize=14, labelFontWeight=700, tickSize=0, domain=False))
+        x=alt.X('변수1_명:O', 
+                title="", 
+                sort=var_order,
+                axis=alt.Axis(
+                    labelAngle=0,             # 텍스트 가로 유지
+                    labelAlign='center',      # 셀의 완벽한 중앙에 위치하도록 정렬
+                    labelOverlap=False,       # 텍스트가 밀려나는 현상 방지
+                    labelPadding=12,          # 차트와의 간격 확보
+                    labelColor="#333D4B", 
+                    labelFontSize=13, 
+                    labelFontWeight=700, 
+                    tickSize=0, 
+                    domain=False
+                )),
+        y=alt.Y('변수2_명:O', 
+                title="", 
+                sort=var_order,
+                axis=alt.Axis(
+                    labelAlign='right',       # 우측 정렬
+                    labelBaseline='middle',   # 셀의 수직 중앙에 위치하도록 정렬
+                    labelPadding=12,
+                    labelColor="#333D4B", 
+                    labelFontSize=13, 
+                    labelFontWeight=700, 
+                    tickSize=0, 
+                    domain=False
+                ))
     )
     
     # 히트맵 사각형 (토스 블루 색상 스케일 및 모서리 라운드 처리)
