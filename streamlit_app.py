@@ -135,8 +135,12 @@ st.markdown("""
         border-radius: 0 12px 12px 0;
     }
     
-    /* 탭 헤더 간격 조정 */
-    .block-container { padding-top: 2.5rem; }
+    /* 메인 화면 가로 폭 제한 및 중앙 정렬 (가독성 향상) */
+    .block-container { 
+        padding-top: 2.5rem; 
+        max-width: 950px !important; /* 너무 넓어지지 않도록 고정 */
+        margin: 0 auto;
+    }
 </style>
 """, unsafe_allow_html=True)
 
