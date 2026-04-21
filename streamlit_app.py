@@ -2,20 +2,7 @@ import streamlit as st
 import pandas as pd
 import statsmodels.api as sm
 from pathlib import Path
-import matplotlib.pyplot as plt
-import platform  # --- [추가] 사용자의 OS(운영체제)를 확인하는 라이브러리 ---
-
-# --- [수정] OS별 그래프 한글 폰트 자동 설정 ---
-os_name = platform.system()
-if os_name == 'Darwin':  # Mac 사용자
-    plt.rc('font', family='AppleGothic')
-elif os_name == 'Windows':  # Windows 사용자
-    plt.rc('font', family='Malgun Gothic')
-else:  # Linux (스트림릿 클라우드 등)
-    plt.rc('font', family='NanumGothic')
-
-plt.rcParams['axes.unicode_minus'] = False # 마이너스(-) 기호 깨짐 방지
-# -----------------------------------------------
+import altair as alt  # 🚨 matplotlib 대신 웹 전용 차트 라이브러리 사용!
 
 # 페이지 설정
 st.set_page_config(
@@ -189,38 +176,53 @@ elif section == "데이터 안내":
 elif section == "회귀 분석":
     st.subheader("회귀 분석 실행")
     
-    analysis_df = raw_df[[dependent_var] + independent_vars].copy()
-    
-    for col in analysis_df.columns:
-        analysis_df[col] = pd.to_numeric(analysis_df[col], errors='coerce')
-        
-    analysis_df = analysis_df.dropna()
+    # ==========================================
+    # 🚨 원본 코드와 100% 동일하게 작동하도록 수정!
+    # 강제 변환(to_numeric)을 제거하고 순수하게 dropna()만 적용합니다.
+    # ==========================================
+    variables = [dependent_var] + independent_vars
+    analysis_df = raw_df[variables].dropna()
     
     if analysis_df.shape[0] == 0:
-        st.error("🚨 분석할 수 있는 유효한 숫자 데이터가 0개입니다! CSV 파일의 Q9, Q4A1, Q7A5, Q8A1 열에 한글이 섞여 있거나 빈칸인지 확인해 주세요.")
+        st.error("🚨 분석할 수 있는 유효한 데이터가 0개입니다!")
         st.stop()
     
     st.write(f"- 사용된 샘플 수: {analysis_df.shape[0]}개")
 
+    # 독립변수(X)와 종속변수(y) 설정 (원본과 동일)
     Y = analysis_df[dependent_var]
     X = analysis_df[independent_vars]
+    
+    # 상수항 추가 및 모델 적합 (원본과 동일)
     X = sm.add_constant(X)
     model = sm.OLS(Y, X).fit()
 
     # ==========================================
-    # 🚨 한글 깨짐 완전 해결! (Streamlit Native Chart 사용)
-    # matplotlib을 쓰지 않고 Streamlit 기본 기능으로 그립니다.
+    # 🚨 히스토그램 파트: Altair 사용 & 글씨 크기 조절
     # ==========================================
     st.write("### 독립변수 분포 (히스토그램)")
     cols = st.columns(len(independent_vars))
     
     for i, var in enumerate(independent_vars):
         with cols[i]:
-            st.write(f"**{var_names[var]} ({var})**")
-            # 변수의 값별 빈도수를 계산 (히스토그램과 같은 효과)
-            value_counts = analysis_df[var].value_counts().sort_index()
-            # Streamlit의 bar_chart를 사용하여 깨짐 없이 출력
-            st.bar_chart(value_counts, color="#60b4ff")
+            # 히스토그램을 그리기 위해 데이터 정렬
+            value_counts = analysis_df[var].value_counts().sort_index().reset_index()
+            value_counts.columns = [var, '빈도']
+            
+            # Altair 차트 생성 (폰트 크기 조절 속성 포함)
+            chart = alt.Chart(value_counts).mark_bar(color="#60b4ff").encode(
+                x=alt.X(f"{var}:N", title=f"{var_names[var]} ({var})", axis=alt.Axis(
+                    labelFontSize=14,  
+                    titleFontSize=16,  
+                    labelAngle=0       
+                )),
+                y=alt.Y("빈도:Q", title="빈도 수", axis=alt.Axis(
+                    labelFontSize=14,  
+                    titleFontSize=16   
+                ))
+            ).properties(height=300) 
+            
+            st.altair_chart(chart, use_container_width=True)
 
     st.write("### 회귀 계수 결과")
     coef_table = model.summary2().tables[1].reset_index()
@@ -242,7 +244,7 @@ elif section == "회귀 분석":
         st.text(model.summary())
 
 # 4. 결과 및 제출 자료 섹션
-elif section == "결과 및 제출 자료":
+elif section == "결과 및 회고": # <- 필요하다면 메뉴 이름 수정 가능
     st.subheader("결과 해석 및 제출 자료")
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>핵심 해석</div>", unsafe_allow_html=True)
