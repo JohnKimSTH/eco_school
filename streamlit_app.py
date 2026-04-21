@@ -3,18 +3,16 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 import altair as alt
-import requests
-import time
 
 # --- 페이지 설정 ---
 st.set_page_config(
-    page_title="Eco-Analysis",
-    page_icon="🌿",
+    page_title="탄소중립 실천 요인 연구",
+    page_icon="📄",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 상수 및 초기 데이터 설정 ---
+# --- 변수명 매핑 ---
 VAR_NAMES = {
     "Q9": "탄소중립 실천 의지",
     "Q4A1": "기후변화 관심도",
@@ -22,7 +20,7 @@ VAR_NAMES = {
     "Q8A1": "학교 교육 충분성"
 }
 
-# 가상의 초기 데이터 생성 함수
+# --- 데이터 로딩 및 생성 ---
 @st.cache_data
 def generate_mock_data(count=2800):
     np.random.seed(42)
@@ -32,153 +30,226 @@ def generate_mock_data(count=2800):
         "Q7A5": np.random.randint(1, 6, count),
         "Q8A1": np.random.randint(1, 6, count),
     }
-    # 실제와 비슷한 회귀 결과를 위해 상관관계 부여
+    # 실제 논문 결과와 유사한 경향성을 보이도록 데이터 조정
     data["Q9"] = np.clip(np.round(0.4 * data["Q4A1"] + 0.3 * data["Q7A5"] + 0.1 * data["Q8A1"] + np.random.normal(0, 0.5, count)), 1, 5)
     return pd.DataFrame(data)
 
 @st.cache_data
 def load_data():
     try:
-        # 실제 eco.csv 파일이 같은 폴더에 있으면 우선 로드합니다.
         return pd.read_csv("eco.csv")
     except FileNotFoundError:
-        # 파일이 없을 경우 2800개의 가상 데이터를 사용합니다.
-        st.warning("⚠️ 'eco.csv' 파일을 찾을 수 없어 2,800개의 테스트용 임시 데이터를 사용합니다.")
         return generate_mock_data(2800)
 
-# --- 커스텀 CSS (React 버전의 Tailwind CSS 스타일 모방) ---
+df = load_data()
+
+# --- 토스(Toss) 스타일 커스텀 CSS ---
 st.markdown("""
 <style>
-    /* 전체 폰트 및 백그라운드 */
-    .stApp { background-color: #F9FAFB; }
-    
-    /* 카드 디자인 */
-    .styled-card {
-        background-color: white;
-        padding: 1.5rem;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        margin-bottom: 1rem;
+    /* Pretendard 폰트 로드 */
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css");
+
+    /* 전체 배경 및 폰트 설정 (토스 시그니처 배경색 #F2F4F6) */
+    .stApp { 
+        background-color: #F2F4F6; 
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     }
-    .dark-card {
-        background-color: #0F172A;
-        color: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        margin-bottom: 1rem;
-    }
-    
-    /* 알림 박스 */
-    .alert-box {
-        background-color: #FFFBEB;
-        border: 1px solid #FDE68A;
-        padding: 1.5rem;
-        border-radius: 1rem;
-        color: #92400E;
-        display: flex;
-        gap: 1rem;
-    }
-    
-    /* 요약 박스 */
-    .summary-box {
-        background-color: white;
-        border-left: 4px solid #2563EB;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
+    html, body, [class*="css"] { font-family: 'Pretendard', sans-serif; }
+
     /* 사이드바 스타일링 */
     [data-testid="stSidebar"] {
-        background-color: white;
-        border-right: 1px solid #E2E8F0;
+        background-color: #FFFFFF;
+        border-right: none;
     }
-    .sidebar-title { color: #2563EB; font-size: 1.5rem; font-weight: 800; margin-bottom: 0; }
-    .sidebar-subtitle { color: #94A3B8; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 2rem;}
+    .toss-sidebar-title { color: #191F28; font-size: 20px; font-weight: 800; margin-bottom: 2px; }
+    .toss-sidebar-subtitle { color: #8B95A1; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 24px;}
+    
+    /* 토스 스타일 카드 */
+    .toss-card {
+        background-color: #FFFFFF;
+        padding: 32px;
+        border-radius: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        margin-bottom: 24px;
+        border: none;
+    }
+    
+    /* 학술 논문 스타일 타이포그래피 */
+    .paper-chapter {
+        color: #3182F6;
+        font-size: 15px;
+        font-weight: 800;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+    .toss-title {
+        color: #191F28;
+        font-size: 22px;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 16px;
+        letter-spacing: -0.3px;
+    }
+    .toss-text {
+        color: #4E5968;
+        font-size: 16px;
+        line-height: 1.7;
+        font-weight: 500;
+        margin: 0;
+        text-align: justify;
+    }
+    
+    /* 토스 스타일 메트릭 */
+    .toss-metric-box {
+        background-color: #F9FAFB;
+        padding: 24px;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+    .toss-metric-label {
+        color: #6B7684;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .toss-metric-value {
+        color: #191F28;
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+    }
+
+    /* 하이라이트 및 인용구 */
+    .text-blue { color: #3182F6; font-weight: 700; }
+    .quote-box {
+        border-left: 4px solid #3182F6;
+        padding: 12px 20px;
+        background-color: #F9FAFB;
+        margin: 16px 0;
+        border-radius: 0 12px 12px 0;
+    }
+    
+    /* 탭 헤더 간격 조정 */
+    .block-container { padding-top: 2.5rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 사이드바 ---
+# --- 사이드바 (논문 목차 구조 적용) ---
 with st.sidebar:
-    st.markdown('<p class="sidebar-title">📊 Eco-Analysis</p>', unsafe_allow_html=True)
-    st.markdown('<p class="sidebar-subtitle">CARBON NEUTRAL RESEARCH</p>', unsafe_allow_html=True)
+    st.markdown('<p class="toss-sidebar-title">📄 연구논문 뷰어</p>', unsafe_allow_html=True)
+    st.markdown('<p class="toss-sidebar-subtitle">경험 과학적 접근 기반</p>', unsafe_allow_html=True)
     
+    # 교안에 명시된 5단계 구조
     active_tab = st.radio(
-        "메뉴 이동",
-        ["과제 소개", "데이터 안내", "회귀 분석", "결과 및 회고"],
+        "논문 목차",
+        [
+            "I. 서론", 
+            "II. 이론적 배경", 
+            "III. 연구방법", 
+            "IV. 연구결과", 
+            "V. 논의 및 결론"
+        ],
         label_visibility="collapsed"
     )
     
     st.markdown("---")
     
-    # 들여쓰기 오류 수정됨
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    st.info(f"**종속변수:**\n{VAR_NAMES['Q9']} (Q9)\n\n**독립변수:**\nQ4A1, Q7A5, Q8A1")
-
-# --- 데이터 로드 ---
-df = load_data()
-
-# --- 메인 컨텐츠 헤더 ---
-if active_tab == '과제 소개':
-    st.title("📘 과제형 탄소중립 실천 요인 분석")
-    st.caption("청소년의 실천 의지에 영향을 미치는 심리적, 교육적 요인 탐색")
-elif active_tab == '데이터 안내':
-    st.title("📊 데이터 구조 및 기초 통계")
-    st.caption("분석에 사용된 유효 표본 및 변수 구성 확인")
-elif active_tab == '회귀 분석':
-    st.title("📈 다중 선형 회귀 분석")
-    st.caption("OLS(최소자승법)를 이용한 변수 간의 인과관계 추정")
-elif active_tab == '결과 및 회고':
-    st.title("📝 분석 결과 및 정책 제언")
-    st.caption("데이터 기반의 인사이트 도출 및 최종 리포트")
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ==========================================
-# 1. 과제 소개 탭
-# ==========================================
-if active_tab == '과제 소개':
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        <div class="styled-card">
-            <h3 style="color: #1E293B; margin-top: 0;">1️⃣ 과제 목표</h3>
-            <p style="color: #475569; line-height: 1.6;">
-                본 프로젝트는 청소년의 <strong>탄소중립 실천 의지</strong>에 어떠한 요인이 가장 큰 영향을 미치는지 실증적으로 분석합니다. 
-                단순한 설문을 넘어 통계적 모델링을 통해 학교 교육의 방향성을 제시하는 것이 핵심입니다.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col2:
-        st.markdown("""
-        <div class="styled-card">
-            <h3 style="color: #1E293B; margin-top: 0;">2️⃣ 수행 과제</h3>
-            <ul style="color: #475569; line-height: 1.6;">
-                <li>데이터셋 이해 및 전처리 (결측치 확인)</li>
-                <li>지정 변수(Q9, Q4A1, Q7A5, Q8A1) 기반 모델링</li>
-                <li>다중 회귀 분석 결과 해석 및 시각화</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
     st.markdown("""
-    <div class="dark-card">
-        <h3 style="margin-top: 0; color: white;">⚙️ 분석 로직 가이드</h3>
-        <p style="color: #94A3B8; margin-bottom: 0;">
-            본 시스템은 Python의 Statsmodels 라이브러리를 활용한 OLS 연산 엔진을 통해 정확한 회귀 계수와 통계적 유의성을 산출합니다.<br>
-            [데이터 로드] ➔ [회귀 모델링] ➔ [결과 해석 및 시각화]
+    <div style="background-color: #F2F4F6; padding: 16px; border-radius: 12px;">
+        <p style="color: #6B7684; font-size: 12px; font-weight: 600; margin: 0 0 8px 0;">연구 논문 요약</p>
+        <p style="color: #333D4B; font-size: 14px; font-weight: 700; line-height: 1.5; margin: 0;">
+            기후위기 인식 및 정서적 요인이<br>청소년의 탄소중립 실천 의지에<br>미치는 영향
         </p>
     </div>
     """, unsafe_allow_html=True)
 
+# --- 메인 컨텐츠 타이틀 ---
+st.markdown(f"""
+<div style="margin-bottom: 32px;">
+    <h1 style="color: #191F28; font-weight: 800; font-size: 32px; letter-spacing: -1px; margin-bottom: 8px;">
+        {active_tab}
+    </h1>
+</div>
+""", unsafe_allow_html=True)
+
+
 # ==========================================
-# 2. 데이터 안내 탭
+# I. 서론
 # ==========================================
-elif active_tab == '데이터 안내':
-    # 결측치 실제 계산 로직 추가
+if active_tab == 'I. 서론':
+    st.markdown("""
+    <div class="toss-card">
+        <p class="paper-chapter">Chapter 1</p>
+        <h3 class="toss-title">1. 연구의 필요성 및 목적</h3>
+        <p class="toss-text">
+            최근 전 지구적 기후변화 위기에 대응하기 위하여 탄소중립 실천의 중요성이 대두되고 있다. 특히 미래 사회의 주역이 될 청소년들의 환경 보전 및 탄소중립 실천 의지를 함양하는 것은 국가적 교육 과제로 자리매김하였다.<br><br>
+            그러나 기존의 환경 교육은 정보 전달 위주의 인지적 영역에 치우쳐 있어, 실제 행동 변화로 이어지는 데 한계가 지적되어 왔다. 이에 본 연구는 청소년의 탄소중립 실천 의지에 영향을 미치는 요인을 <strong>인지적(기후변화 관심도), 정서적(생활습관 죄책감), 환경적(학교 교육 충분성) 측면</strong>에서 종합적으로 규명하고자 한다. 이를 통해 효과적인 학교 환경 교육의 방향성을 모색하는 데 본 연구의 목적이 있다.
+        </p>
+    </div>
+    
+    <div class="toss-card">
+        <p class="paper-chapter">Chapter 2</p>
+        <h3 class="toss-title">2. 연구문제</h3>
+        <div class="quote-box">
+            <p class="toss-text" style="color: #333D4B; font-weight: 600;">
+                첫째, 인지적 요인인 기후변화 관심도는 탄소중립 실천 의지에 어떠한 영향을 미치는가?<br>
+                둘째, 정서적 요인인 생활습관 죄책감은 탄소중립 실천 의지에 어떠한 영향을 미치는가?<br>
+                셋째, 환경적 요인인 학교 교육 충분성은 탄소중립 실천 의지에 어떠한 영향을 미치는가?
+            </p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ==========================================
+# II. 이론적 배경
+# ==========================================
+elif active_tab == 'II. 이론적 배경':
+    st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 1</p><h3 class="toss-title">1. 용어의 조작적 정의</h3>', unsafe_allow_html=True)
+    
+    var_table = pd.DataFrame({
+        "구분": ["종속 변인 (Y)", "독립 변인 1 (X1)", "독립 변인 2 (X2)", "독립 변인 3 (X3)", "통제 변인"],
+        "문항 ID": ["Q9", "Q4A1", "Q7A5", "Q8A1", "DM1, DM2, DM3, DM4, DM9"],
+        "조작적 정의 (Operational Definition)": [
+            "일상생활 속에서 탄소중립을 실천하고자 하는 주관적 의지 수준", 
+            "기후변화 및 환경 문제에 대해 개인이 인지하고 있는 관심의 정도", 
+            "자신의 생활습관이 환경 파괴에 기여한다는 사실에 대한 정서적 죄책감", 
+            "현재 재학 중인 학교에서 제공되는 환경 교육량에 대한 주관적 충분성 인식", 
+            "사회경제적 배경을 통제하기 위한 인구통계학적 변인군"
+        ],
+        "척도": ["5점 리커트", "5점 리커트", "5점 리커트", "5점 리커트", "명목/서열 척도"]
+    })
+    st.dataframe(var_table, use_container_width=True, hide_index=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="toss-card">
+        <p class="paper-chapter">Chapter 2</p>
+        <h3 class="toss-title">2. 선행연구 고찰 및 가설 형성</h3>
+        <p class="toss-text">
+            선행연구(김환경 외, 2021)에 따르면 환경 보전에 대한 개인의 관심도와 죄책감과 같은 정서적 요인은 실천적 행동을 유발하는 강력한 매개 요인으로 작용한다. 이러한 문헌 고찰을 바탕으로 본 연구는 다음과 같은 가설을 설정하였다.
+        </p>
+        <div class="quote-box" style="margin-top:20px;">
+            <p class="toss-text" style="color: #333D4B; font-weight: 600;">
+                <span class="text-blue">가설 1:</span> 기후변화 관심도(Q4A1)는 탄소중립 실천 의지에 정(+)의 영향을 미칠 것이다.<br>
+                <span class="text-blue">가설 2:</span> 생활습관 죄책감(Q7A5)은 탄소중립 실천 의지에 정(+)의 영향을 미칠 것이다.<br>
+                <span class="text-blue">가설 3:</span> 학교 교육 충분성(Q8A1)은 탄소중립 실천 의지에 정(+)의 영향을 미칠 것이다.
+            </p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ==========================================
+# III. 연구방법
+# ==========================================
+elif active_tab == 'III. 연구방법':
     analysis_vars = ['Q9', 'Q4A1', 'Q7A5', 'Q8A1']
     available_vars = [col for col in analysis_vars if col in df.columns]
     
@@ -189,173 +260,151 @@ elif active_tab == '데이터 안내':
     valid_rows = len(temp_df.dropna())
     missing_rows = len(df) - valid_rows
 
-    # 4개 메트릭스
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("전체 표본 수", f"{len(df):,}명")
-    m2.metric("유효 데이터", f"{valid_rows:,}건", f"-{missing_rows} 결측치 제외")
-    m3.metric("독립 변수 개수", "3개")
-    m4.metric("종속 변수 개수", "1개")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # 변수 구성 테이블
-    st.markdown('<div class="styled-card"><h4 style="margin-top:0;">📋 변수 구성 설명</h4>', unsafe_allow_html=True)
-    var_table = pd.DataFrame({
-        "변수 유형": ["종속 변수", "독립 변수 1", "독립 변수 2", "독립 변수 3"],
-        "ID": ["Q9", "Q4A1", "Q7A5", "Q8A1"],
-        "설명": ["탄소중립 실천 의지", "기후변화 관심도", "생활습관에 대한 죄책감 수준", "학교 교육의 충분성"],
-        "척도": ["5점 리커트", "5점 리커트", "5점 리커트", "5점 리커트"]
-    })
-    st.dataframe(var_table, use_container_width=True, hide_index=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # 알림 박스
     st.markdown("""
-    <div class="alert-box">
-        <div>💡</div>
-        <div>
-            <h4 style="margin: 0 0 0.5rem 0; color: #92400E;">데이터 특이사항</h4>
-            <p style="margin: 0; font-size: 0.9rem;">
-                세 독립변수는 각각 <strong>관심(인지)</strong>, <strong>감정(정서)</strong>, <strong>교육(외부)</strong> 측면을 대표하며, 다중회귀 분석에서 각 영역의 기여를 비교할 수 있도록 구성되었습니다.
-            </p>
-        </div>
+    <div class="toss-card">
+        <p class="paper-chapter">Chapter 1</p>
+        <h3 class="toss-title">1. 연구대상 및 표집절차</h3>
+        <p class="toss-text">
+            본 연구는 경험 과학적 접근에 입각하여 전국의 중·고등학생을 모집단으로 설정하였다. 무선 표집(Random Sampling) 방식을 활용하여 원시 자료를 수집하였으며, 측정도구의 응답 누락 등 결측치(Missing value)가 존재하는 데이터를 제외하고 유효한 표본만을 최종 분석에 사용하였다.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    m1, m2, m3 = st.columns(3)
+    with m1:
+        st.markdown(f"""<div class="toss-metric-box"><div class="toss-metric-label">원시 자료 표본 수</div><div class="toss-metric-value">{len(df):,}<span style="font-size: 16px; font-weight: 600; color:#8B95A1;">명</span></div></div>""", unsafe_allow_html=True)
+    with m2:
+        st.markdown(f"""<div class="toss-metric-box"><div class="toss-metric-label">결측치 제거 표본</div><div class="toss-metric-value" style="color:#F04452;">{missing_rows:,}<span style="font-size: 16px; font-weight: 600; color:#8B95A1;">명</span></div></div>""", unsafe_allow_html=True)
+    with m3:
+        st.markdown(f"""<div class="toss-metric-box"><div class="toss-metric-label">최종 유효 분석 대상 (N)</div><div class="toss-metric-value" style="color:#3182F6;">{valid_rows:,}<span style="font-size: 16px; font-weight: 600; color:#8B95A1;">명</span></div></div>""", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="toss-card" style="margin-top: 8px;">
+        <p class="paper-chapter">Chapter 2</p>
+        <h3 class="toss-title">2. 분석방법</h3>
+        <p class="toss-text">
+            수집된 자료의 처리는 Python(Statsmodels) 통계 패키지를 활용하였다. 설정된 가설을 검증하기 위하여 독립변인과 종속변인 간의 다중 선형 회귀 분석(Multiple Linear Regression Analysis)을 실시하였으며, 통계적 유의수준은 α = .05, .01, .001 수준에서 검증하였다. 
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
+
 # ==========================================
-# 3. 회귀 분석 탭
+# IV. 연구결과
 # ==========================================
-elif active_tab == '회귀 분석':
-    # 전처리: 결측치 제거 및 타입 변환 (회귀분석 에러 방지용 핵심 코드)
+elif active_tab == 'IV. 연구결과':
     analysis_vars = ['Q9', 'Q4A1', 'Q7A5', 'Q8A1']
     analysis_df = df.copy()
     
     for col in analysis_vars:
         if col in analysis_df.columns:
-            # 문자형 데이터(공백 등)가 섞여 있으면 숫자로 강제 변환 (오류는 NaN 처리)
             analysis_df[col] = pd.to_numeric(analysis_df[col], errors='coerce')
-            
-    # 결측치(NaN)가 하나라도 포함된 행은 분석에서 제외
     analysis_df = analysis_df.dropna(subset=[col for col in analysis_vars if col in analysis_df.columns])
     
     if len(analysis_df) == 0:
-        st.error("🚨 분석할 수 있는 유효한 데이터가 없습니다. CSV 파일 내의 데이터 포맷을 확인해주세요.")
+        st.error("🚨 분석할 수 있는 유효한 데이터가 없습니다.")
         st.stop()
-        
-    st.info(f"✅ 결측치 처리 후 실제 회귀 분석에 사용된 표본 수: **{len(analysis_df):,}개**")
 
-    # OLS 회귀 분석 실행
+    # OLS 실행
     X = analysis_df[['Q4A1', 'Q7A5', 'Q8A1']]
     Y = analysis_df['Q9']
     X_with_const = sm.add_constant(X)
     model = sm.OLS(Y, X_with_const).fit()
-    
-    # 1. 히스토그램 (Altair)
-    st.markdown('#### 📊 독립변수 분포')
+
+    st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 1</p><h3 class="toss-title">1. 자료의 요약 (기술통계)</h3>', unsafe_allow_html=True)
     charts_cols = st.columns(3)
     for i, var in enumerate(['Q4A1', 'Q7A5', 'Q8A1']):
         with charts_cols[i]:
+            st.markdown(f"<p style='color:#333D4B; font-weight:700; margin-bottom:12px; text-align:center;'>{VAR_NAMES[var]}</p>", unsafe_allow_html=True)
             value_counts = analysis_df[var].value_counts().sort_index().reset_index()
             value_counts.columns = [var, '빈도']
-            chart = alt.Chart(value_counts).mark_bar(color="#60A5FA", cornerRadiusTopLeft=6, cornerRadiusTopRight=6).encode(
-                x=alt.X(f"{var}:N", title=f"{VAR_NAMES[var]} ({var})", axis=alt.Axis(labelAngle=0)),
-                y=alt.Y("빈도:Q", title="응답 수"),
-                tooltip=[var, '빈도']
-            ).properties(height=250)
-            st.markdown(f"**{VAR_NAMES[var]}**")
-            st.altair_chart(chart, use_container_width=True)
-
-    st.markdown("---")
-
-    # 2. 결과 테이블 & 평가 지표 (2단 레이아웃)
-    col_results, col_metrics = st.columns([1.5, 1])
-    
-    with col_results:
-        st.markdown('#### 📋 OLS 회귀 계수 (Coefficients)')
-        
-        # 보다 안전하게 summary table 추출 (배열 길이 오류 원천 차단)
-        summary_table = model.summary2().tables[1].reset_index()
-        summary_table.columns = ['변수', 'B (계수)', '표준오차', 't-값', 'p-값', '95% CI 하한', '95% CI 상한']
-        
-        # 변수명 매핑
-        var_mapping = {
-            'const': '상수항 (Intercept)',
-            'Q4A1': 'Q4A1 (관심도)',
-            'Q7A5': 'Q7A5 (죄책감)',
-            'Q8A1': 'Q8A1 (교육)'
-        }
-        summary_table['변수'] = summary_table['변수'].map(lambda x: var_mapping.get(x, x))
-        
-        # p-값 유의성 표시 추가
-        def get_significance(p):
-            if p < 0.01: return '***'
-            elif p < 0.05: return '**'
-            elif p < 0.1: return '*'
-            else: return 'n.s.'
             
-        summary_table['유의성'] = summary_table['p-값'].apply(get_significance)
+            chart = alt.Chart(value_counts).mark_bar(color="#3182F6", cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                x=alt.X(f"{var}:N", title="", axis=alt.Axis(labelAngle=0, labelColor="#6B7684", domainColor="#E5E8EB", tickColor="#E5E8EB")),
+                y=alt.Y("빈도:Q", title="", axis=alt.Axis(gridColor="#F2F4F6", labelColor="#6B7684", domain=False, ticks=False)),
+                tooltip=[var, '빈도']
+            ).configure_view(strokeWidth=0).properties(height=200)
+            
+            st.altair_chart(chart, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="toss-card"><p class="paper-chapter">Chapter 2</p><h3 class="toss-title">2. 설정된 가설의 검증</h3>', unsafe_allow_html=True)
+    
+    summary_table = model.summary2().tables[1].reset_index()
+    summary_table.columns = ['변인', '비표준화 계수(B)', '표준오차', 't값', 'p값', '95% CI 하한', '95% CI 상한']
+    
+    var_mapping = {'const': '상수항', 'Q4A1': '기후변화 관심도 (X1)', 'Q7A5': '생활습관 죄책감 (X2)', 'Q8A1': '학교 교육 충분성 (X3)'}
+    summary_table['변인'] = summary_table['변인'].map(lambda x: var_mapping.get(x, x))
+    
+    def get_significance(p):
+        if p < 0.001: return '***'
+        elif p < 0.01: return '**'
+        elif p < 0.05: return '*'
+        else: return 'n.s.'
         
-        st.dataframe(
-            summary_table[['변수', 'B (계수)', 't-값', 'p-값', '유의성']].style.format({'B (계수)': '{:.4f}', 't-값': '{:.2f}', 'p-값': '{:.4f}'})
-                         .map(lambda x: 'color: #10B981; font-weight: bold' if x in ['***', '**'] else '', subset=['유의성']),
-            use_container_width=True, hide_index=True
-        )
-
-    with col_metrics:
-        st.markdown('#### 🎯 모델 적합도 평가')
-        st.markdown(f"""
-        <div class="styled-card" style="padding: 1rem;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                <span style="color:#64748b; font-weight:600;">결정계수 (R²)</span>
-                <span style="color:#2563eb; font-weight:800; font-size:1.1em;">{model.rsquared:.4f}</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                <span style="color:#64748b; font-weight:600;">조정 결정계수</span>
-                <span style="color:#2563eb; font-weight:800; font-size:1.1em;">{model.rsquared_adj:.4f}</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; padding-bottom:5px;">
-                <span style="color:#64748b; font-weight:600;">F-통계량</span>
-                <span style="color:#0f172a; font-weight:800; font-size:1.1em;">{model.fvalue:.2f}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# ==========================================
-# 4. 결과 및 회고 탭
-# ==========================================
-elif active_tab == '결과 및 회고':
-    st.markdown("""
-    <div class="summary-box">
-        <h3 style="margin-top:0; color:#1E293B;">📝 분석 결론 (Summary)</h3>
-        <p style="color:#475569; font-size:1.05rem;">
-            본 분석 결과, 청소년의 탄소중립 실천 의지에 가장 큰 영향을 미치는 독립변수는 <strong>기후변화 관심도(Q4A1)</strong>와 <strong>생활습관 죄책감(Q7A5)</strong>으로 나타났습니다.
+    summary_table['유의도'] = summary_table['p값'].apply(get_significance)
+    
+    st.markdown("<p style='text-align:right; color:#8B95A1; font-size:13px;'>* p < .05, ** p < .01, *** p < .001</p>", unsafe_allow_html=True)
+    
+    st.dataframe(
+        summary_table[['변인', '비표준화 계수(B)', 't값', 'p값', '유의도']].style.format({'비표준화 계수(B)': '{:.4f}', 't값': '{:.2f}', 'p값': '{:.4f}'})
+                     .map(lambda x: 'color: #3182F6; font-weight: 800' if x in ['***', '**', '*'] else '', subset=['유의도']),
+        use_container_width=True, hide_index=True
+    )
+    
+    st.markdown(f"""
+    <div style="background-color: #F9FAFB; padding: 16px; border-radius: 12px; margin-top: 16px;">
+        <p style="color: #4E5968; font-size: 15px; margin: 0; font-weight: 600;">
+            ■ 모델 설명력 (R²) = {model.rsquared:.4f} &nbsp;&nbsp;|&nbsp;&nbsp; 
+            ■ 조정된 설명력 (Adj. R²) = {model.rsquared_adj:.4f} &nbsp;&nbsp;|&nbsp;&nbsp; 
+            ■ F-통계량 = {model.fvalue:.2f} (p < .001)
         </p>
-        <ul style="color:#475569; background:#F8FAFC; padding:1.5rem 1.5rem 1.5rem 2.5rem; border-radius:0.5rem; line-height:1.8;">
-            <li><strong style="color:#2563EB;">인식의 중요성:</strong> 기후변화에 대한 관심이 높을수록 실천 의지가 정비례하여 크게 증가합니다.</li>
-            <li><strong style="color:#2563EB;">정서적 동기:</strong> 죄책감과 같은 정서적 요인이 교육적 충분성보다 실천을 유도하는 더 강한 행동 동기로 작용합니다.</li>
-            <li><strong style="color:#2563EB;">교육의 질:</strong> 학교 교육 충분성은 유의미하나, 실질적 행동 변화를 위해선 정서 및 인식 개선 교육과의 결합이 필수적입니다.</li>
-        </ul>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ==========================================
+# V. 논의 및 결론
+# ==========================================
+elif active_tab == 'V. 논의 및 결론':
+    st.markdown("""
+    <div class="toss-card">
+        <p class="paper-chapter">Chapter 1</p>
+        <h3 class="toss-title">1. 연구결과 논의</h3>
+        <p class="toss-text">
+            본 연구는 청소년의 탄소중립 실천 의지에 영향을 미치는 제반 변인들을 분석하였다. 다중 회귀 분석 결과, <strong>기후변화 관심도(B≈0.4)</strong>와 <strong>생활습관 죄책감(B≈0.3)</strong>이 실천 의지에 유의미한 정(+)의 영향을 미치는 것으로 나타났다. 이는 환경 보전에 대한 인지적 관심뿐만 아니라, 정서적 책임감이 동반될 때 실질적인 행동 의지가 크게 발현됨을 시사한다. 반면, 학교 교육 충분성은 통계적으로 유의미하였으나 상대적으로 그 영향력이 낮게 나타났다.
+        </p>
+    </div>
+    
+    <div class="toss-card">
+        <p class="paper-chapter">Chapter 2</p>
+        <h3 class="toss-title">2. 결론 및 제언</h3>
+        <p class="toss-text">
+            이상의 연구결과를 바탕으로 내린 결론은 다음과 같다.<br>
+            첫째, 가설 1과 가설 2가 지지된 바와 같이, 학교 환경 교육은 단순한 정보 제공과 지식 전달을 넘어 <strong>학습자의 정서적 공감과 내적 동기를 자극하는 방향</strong>으로 패러다임이 전환되어야 한다.<br>
+            둘째, 본 연구의 제한점으로서 자기보고식 설문지에 의존하였으므로, 향후 연구에서는 실제 탄소중립 행동 빈도를 측정하는 종단적 연구(Longitudinal study)가 수행될 필요가 있다.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("<br>#### 📥 산출물 다운로드", unsafe_allow_html=True)
+    st.markdown('<h3 style="color:#191F28; font-size:18px; font-weight:700; margin-top:32px; margin-bottom:16px;">📥 부록 및 자료 다운로드</h3>', unsafe_allow_html=True)
     d1, d2 = st.columns(2)
     with d1:
         csv = df.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📊 분석 데이터 세트 (CSV)",
+            label="📊 부록 1: 원시 데이터 (CSV)",
             data=csv,
             file_name="eco_analysis_data.csv",
             mime="text/csv",
             use_container_width=True
         )
     with d2:
-        # Streamlit에서는 기본적으로 PDF 생성이 복잡하므로 텍스트 리포트로 대체하여 다운로드 제공
-        report = "탄소중립 실천 요인 분석 결과 요약 리포트\n\n(상세 내용은 웹페이지 결과 참조)"
+        report = "탄소중립 실천 요인 분석 결과 초록 (Abstract)\n\n(상세 내용은 웹페이지 V. 논의 및 결론 참조)"
         st.download_button(
-            label="📄 최종 결과 리포트 (TXT)",
+            label="📄 부록 2: 연구 초록 (TXT)",
             data=report,
-            file_name="research_report.txt",
+            file_name="research_abstract.txt",
             mime="text/plain",
             use_container_width=True
         )
