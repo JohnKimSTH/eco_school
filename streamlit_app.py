@@ -217,16 +217,26 @@ elif section == "회귀 분석":
     for i, var in enumerate(independent_vars):
         with cols[i]:
             st.write(f"**{var_names[var]} ({var})**")
-            # 변수의 값별 빈도수를 계산 (히스토그램과 같은 효과)
-            value_counts = analysis_df[var].value_counts().sort_index()
-            # Streamlit의 bar_chart를 사용하여 깨짐 없이 출력
-            st.bar_chart(value_counts, color="#60b4ff")
-
-    st.write("### 회귀 계수 결과")
-    coef_table = model.summary2().tables[1].reset_index()
-    coef_table.columns = ["변수", "계수", "표준오차", "t값", "p값", "[0.025", "0.975]"]
-    coef_table["변수"] = coef_table["변수"].map(lambda x: var_names.get(x, x))
-    st.dataframe(coef_table, use_container_width=True)
+            
+            # 데이터 준비 (Altair 형식에 맞게 데이터프레임으로 변환)
+            value_counts = analysis_df[var].value_counts().sort_index().reset_index()
+            value_counts.columns = [var, '빈도']
+            
+            # Altair 차트 생성 및 글씨 크기(labelFontSize) 14로 통일
+            chart = alt.Chart(value_counts).mark_bar(color="#60b4ff").encode(
+                x=alt.X(f"{var}:N", title="값", axis=alt.Axis(
+                    labelFontSize=14,  # x축 눈금 글씨 크기
+                    titleFontSize=14,  # x축 제목 글씨 크기
+                    labelAngle=0       # x축 글씨 가로로 똑바로 표시 (기울어짐 방지)
+                )),
+                y=alt.Y("빈도:Q", title="빈도 수", axis=alt.Axis(
+                    labelFontSize=14,  # y축 눈금 글씨 크기
+                    titleFontSize=14   # y축 제목 글씨 크기
+                ))
+            ).properties(height=300) # 그래프 높이 고정
+            
+            # Streamlit 화면에 출력
+            st.altair_chart(chart, use_container_width=True)
 
     st.write("### 모델 평가 지표")
     metrics = {
