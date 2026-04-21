@@ -237,7 +237,7 @@ elif active_tab == 'II. 이론적 배경':
         <p class="paper-chapter">Chapter 2</p>
         <h3 class="toss-title">2. 선행연구 고찰 및 가설 형성</h3>
         <p class="toss-text">
-            선행연구(김환경 외, 2021)에 따르면 환경 보전에 대한 개인의 관심도와 죄책감과 같은 정서적 요인은 실천적 행동을 유발하는 강력한 매개 요인으로 작용한다. 이러한 문헌 고찰을 바탕으로 본 연구는 다음과 같은 가설을 설정하였다.
+            선행연구(김환경 외, 2021)에 따르면 환경 보전에 대한 개인의 관심도와 죄책감과 같은 정서적 요인은 실천적 행동을 유발하는 강력한 매개 요인으로 작용 참조된다. 이러한 문헌 고찰을 바탕으로 본 연구는 다음과 같은 가설을 설정하였다.
         </p>
         <div class="quote-box" style="margin-top:20px;">
             <p class="toss-text" style="color: #333D4B; font-weight: 600;">
@@ -392,23 +392,9 @@ elif active_tab == 'V. 논의 및 결론':
     </div>
     """, unsafe_allow_html=True)
     
+    # --- 부록 및 자료 다운로드 영역 (링크 연동) ---
     st.markdown('<h3 style="color:#191F28; font-size:18px; font-weight:700; margin-top:32px; margin-bottom:16px;">📥 부록 및 자료 다운로드</h3>', unsafe_allow_html=True)
-    d1, d2 = st.columns(2)
-    with d1:
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📊 부록 1: 원시 데이터 (CSV)",
-            data=csv,
-            file_name="eco_analysis_data.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-    with d2:
-        report = "탄소중립 실천 요인 분석 결과 초록 (Abstract)\n\n(상세 내용은 웹페이지 V. 논의 및 결론 참조)"
-        st.download_button(
-            label="📄 부록 2: 연구 초록 (TXT)",
-            data=report,
-            file_name="research_abstract.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
+    
+    nypi_url = "https://www.nypi.re.kr/archive/mps/program/examinDataCode/view?menuId=MENU00226&pageNum=2&titleId=170&schType=0&schText=%ED%83%84%EC%86%8C%EC%A4%91%EB%A6%BD&firstCategory=3&secondCategory=1"
+    
+    st.link_button("🔗 원본 데이터 보러가기 (NYPI 청소년데이터 아카이브)", url=nypi_url, use_container_width=True)
