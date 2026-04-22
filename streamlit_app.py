@@ -130,8 +130,8 @@ if active_tab == 'I. 서론':
 <p class="paper-chapter">Chapter 1</p>
 <h3 class="toss-title">1. 연구의 필요성 및 목적</h3>
 <p class="toss-text">
-최근 전 지구적 기후변화 위기에 대응하기 위하여 탄소중립 실천의 중요성이 대두되고 있다. 특히 미래 사회의 주역이 될 청소년들의 환경 보전 및 탄소중립 실천 의지를 함양하는 것은 국가적 교육 과제로 자리매김하였다.<br><br>
-그러나 기존의 환경 교육은 정보 전달 위주의 인지적 영역에 치우쳐 있어, 실제 행동 변화로 이어지는 데 한계가 지적되어 왔다. 이에 본 연구는 청소년의 탄소중립 실천 의지에 영향을 미치는 요인을 <strong>인지적(기후변화 관심도), 정서적(생활습관 죄책감), 환경적(학교 교육 충분성) 측면</strong>에서 종합적으로 규명하고자 한다. 이를 통해 효과적인 학교 환경 교육의 방향성을 모색하는 데 본 연구의 목적이 있다.
+최근 전 지구적 기후변화 위기에 대응하기 위하여 탄소중립 실천의 중요성이 대두되고 있다. 특히 미래 사회의 주역이 될 청소년들의 환경 보전 및 탄소중립 실천 의지를 함양하는 것은 국가적 차원의 핵심적 교육 의제로 부각되고 있다.<br><br>
+그러나 기존의 환경 교육은 인지적 지식 전달에 편중되어 있어, 실천적 행동 변화를 견인하는 데 한계가 노출되었다. 이에 본 연구는 청소년의 탄소중립 실천 의지에 영향을 미치는 요인을 <strong>인지적(기후변화 관심도), 정서적(생활습관 죄책감), 환경적(학교 교육 충분성) 측면</strong>에서 다각적 차원에서 실증적으로 분석하여 그 영향 관계를 규명하고자 한다. 이를 통해 효과적인 학교 환경 교육의 방향성을 모색하는 데 본 연구의 목적이 있다.
 </p>
 
 <div class="chapter-spacer"></div>
@@ -174,7 +174,7 @@ elif active_tab == 'II. 이론적 배경':
 <p class="paper-chapter">Chapter 2</p>
 <h3 class="toss-title">2. 선행연구 고찰 및 가설 형성</h3>
 <p class="toss-text">
-선행연구(김환경 외, 2021)에 따르면 환경 보전에 대한 개인의 관심도와 죄책감과 같은 정서적 요인은 실천적 행동을 유발하는 강력한 매개 요인으로 작용 참조된다. 이러한 문헌 고찰을 바탕으로 본 연구는 다음과 같은 가설을 설정하였다.
+선행연구(김환경 외, 2021)에 따르면 환경 보전에 대한 개인의 관심도와 죄책감과 같은 정서적 요인은 실천적 행동을 유발하는 강력한 매개 요인으로 핵심적인 선행 요인이자 매개 요인임이 실증적으로 입증된 바 있다. 이러한 문헌 고찰을 바탕으로 본 연구는 다음과 같은 가설을 설정하였다.
 </p>
 <div class="quote-box">
 <p class="toss-text" style="color: #333D4B; font-weight: 600;">
@@ -231,7 +231,7 @@ elif active_tab == 'III. 연구방법':
 <p class="paper-chapter">Chapter 2</p>
 <h3 class="toss-title">2. 분석방법</h3>
 <p class="toss-text">
-수집된 자료의 처리는 Python(Statsmodels) 통계 패키지를 활용하였다. 설정된 가설을 검증하기 위하여 독립변인과 종속변인 간의 다중 선형 회귀 분석(Multiple Linear Regression Analysis)을 실시하였으며, 통계적 유의수준은 α = .05, .01, .001 수준에서 검증하였다. 
+수집된 자료의 통계 처리는 Python 통계 패키지를 활용하였다. 설정된 가설을 검증하기 위하여 독립변인과 종속변인 간의 다중 선형 회귀 분석(Multiple Linear Regression Analysis)을 실시하였으며, 통계적 유의수준은 α = .05, .01, .001 수준에서 검증하였다. 
 </p>
 """, unsafe_allow_html=True)
 
@@ -279,7 +279,7 @@ elif active_tab == 'IV. 연구결과':
 <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; padding: 20px; border-radius: 12px; display: flex; align-items: flex-start; gap: 12px; margin-top: 16px;">
     <div style="font-size: 20px;">💡</div>
     <div style="color: #334155; font-size: 15px; font-weight: 600; line-height: 1.6;">
-        응답 분포를 확인한 결과, 전반적으로 각 변인에 대한 <span style="color:#3182F6; font-weight:800;">극단적인 편향성(Skewness)이 관찰되지 않아</span> 통계 모델링을 수행하기에 <span style="color:#3182F6; font-weight:800;">적합한 데이터 구조</span>를 나타내고 있습니다.
+        응답 분포를 확인한 결과, 전반적으로 각 변인에 대한 왜도와 첨도를 확인한 결과, <span style="color:#3182F6; font-weight:800;">정규성 가정을 크게 벗어나지 않아</span> 회귀분석 수행에 <span style="color:#3182F6; font-weight:800;">적합한 데이터 구조</span>를 나타내고 있습니다.
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -462,7 +462,7 @@ elif active_tab == 'V. 논의 및 결론':
 <h3 class="toss-title">2. 결론 및 제언</h3>
 <p class="toss-text">
 이상의 연구결과를 바탕으로 내린 결론은 다음과 같다.<br><br>
-첫째, 가설 1과 가설 2가 지지된 바와 같이, 학교 환경 교육은 단순한 정보 제공과 지식 전달을 넘어 <span style="color:#3182F6; font-weight:800;">학습자의 정서적 공감과 내적 동기를 자극하는 방향</span>으로 패러다임이 전환되어야 한다.<br><br>
+첫째, 가설 1과 가설 2가 지지된 바와 같이, 학교 환경 교육은 단순한 정보 제공과 지식 전달을 넘어 <span style="color:#3182F6; font-weight:800;">학습자의 정서적 공감과 내적 동기를 자극하는 방향</span>으로 내적 동기 유발을 위한 정서적 접근 중심의 교육 패러다임 전환이 요구된다.<br><br>
 둘째, 본 연구의 제한점으로서 자기보고식 설문지에 의존하였으므로, 향후 연구에서는 실제 탄소중립 행동 빈도를 측정하는 종단적 연구(Longitudinal study)가 수행될 필요가 있다.
 </p>
 
