@@ -55,6 +55,7 @@ st.markdown("""
 
     /* 사이드바 스타일링 */
     [data-testid="stSidebar"] { background-color: #FFFFFF; border-right: none; }
+    .stRadio p, .stRadio label, .stRadio span { color: #191F28 !important; } /* 사이드바 메뉴 텍스트 다크모드 오류 수정 */
     .toss-sidebar-title { color: #191F28; font-size: 20px; font-weight: 800; margin-bottom: 4px; margin-top: 8px;}
     .toss-sidebar-subtitle { color: #8B95A1; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 8px; margin-top: 0;}
     .toss-sidebar-author { color: #3182F6; font-size: 14px; font-weight: 800; margin-bottom: 24px; background-color: #E8F3FF; padding: 6px 12px; border-radius: 8px; display: inline-block; margin-top: 0;}
@@ -71,11 +72,11 @@ st.markdown("""
         margin: 0 auto; 
     }
     
-    /* 챕터 타이포그래피 */
-    .paper-chapter { color: #3182F6; font-size: 15px; font-weight: 900; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .toss-title { color: #191F28; font-size: 24px; font-weight: 800; margin-top: 0; margin-bottom: 24px; letter-spacing: -0.3px; }
-    .sub-title { font-size: 20px; font-weight: 800; color: #191F28; margin-bottom: 24px; }
-    .toss-text { color: #4E5968; font-size: 16px; line-height: 1.8; font-weight: 500; margin: 0; text-align: justify; }
+    /* 챕터 타이포그래피 (다크모드 오류 수정을 위한 색상 고정) */
+    .paper-chapter { color: #3182F6 !important; font-size: 15px; font-weight: 900; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .toss-title { color: #191F28 !important; font-size: 24px; font-weight: 800; margin-top: 0; margin-bottom: 24px; letter-spacing: -0.3px; }
+    .sub-title { font-size: 20px; font-weight: 800; color: #191F28 !important; margin-bottom: 24px; }
+    .toss-text { color: #4E5968 !important; font-size: 16px; line-height: 1.8; font-weight: 500; margin: 0; text-align: justify; }
     
     /* 여백 분리기 (시인성 극대화) */
     .chapter-spacer { margin: 80px 0; border-top: 2px dashed #F2F4F6; }
@@ -115,7 +116,7 @@ with st.sidebar:
 # --- 메인 컨텐츠 타이틀 ---
 st.markdown(f"""
 <div style="margin-bottom: 48px; border-bottom: 3px solid #191F28; padding-bottom: 16px;">
-<h1 style="color: #191F28; font-weight: 900; font-size: 34px; letter-spacing: -1px; margin: 0;">
+<h1 style="color: #191F28 !important; font-weight: 900; font-size: 34px; letter-spacing: -1px; margin: 0;">
 {active_tab}
 </h1>
 </div>
@@ -174,7 +175,7 @@ elif active_tab == 'II. 이론적 배경':
 <p class="paper-chapter">Chapter 2</p>
 <h3 class="toss-title">2. 선행연구 고찰 및 가설 형성</h3>
 <p class="toss-text">
-선행연구(김환경 외, 2021)에 따르면 환경 보전에 대한 개인의 관심도와 죄책감과 같은 정서적 요인은 실천적 행동을 유발하는 강력한 매개 요인으로 핵심적인 선행 요인이자 매개 요인임이 실증적으로 입증된 바 있다. 이러한 문헌 고찰을 바탕으로 본 연구는 다음과 같은 가설을 설정하였다.
+선행연구(황세영·강경균, 2024)에 따르면, 청소년의 기후변화 문제에 대한 높은 관심도와 환경 문제에 대한 정서적 책임감(죄책감 등)은 실제 탄소중립 실천 의지를 이끌어내는 주요한 동인으로 작용합니다. 또한, 한국청소년정책연구원의 보고서(황세영 외, 2022)에서도 청소년의 탄소중립 실천 역량을 강화하기 위해서는 단순 지식 전달 위주의 교육을 넘어, 실생활과 연계된 학교 교육의 충분성이 뒷받침되어야 한다고 강조하고 있습니다. 본 분석 결과 역시 이러한 선행연구의 맥락과 일치하며, 실천 의지를 높이기 위해서는 인지적 관심 증대와 정서적 책임감 강화, 그리고 다각적인 학교 교육이 병행되어야 함을 시사합니다.
 </p>
 <div class="quote-box">
 <p class="toss-text" style="color: #333D4B; font-weight: 600;">
